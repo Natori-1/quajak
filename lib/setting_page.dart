@@ -1,7 +1,7 @@
 
 import 'package:flutter/material.dart';
-import '../common/app_theme.dart';
-import '../common/app_card.dart';
+import 'common/app_theme.dart';
+import 'common/app_card.dart';
 
 class SettingPage extends StatelessWidget {
   const SettingPage({super.key});

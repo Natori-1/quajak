@@ -7,7 +7,8 @@ import 'common/bottom_nav.dart';
 import 'home/home_page.dart';
 import 'calendar/calendar_page.dart';
 import 'cookie/cookie_page.dart';
-import 'cookie/setting_page.dart';
+import 'setting_page.dart';
+import 'cookie/cookie_page.dart';
 
 void main() {
   runApp(const KwajakApp());
