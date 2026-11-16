@@ -79,12 +79,52 @@ class _TaskFormState extends State<TaskForm> {
     }
   }
 
-  void _saveTask() {
+  // 과제 저장
+  Future<void> _saveTask() async {
     if (_titleController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('과제명을 입력해 주세요.'),
-        ),
+      await showDialog(
+        context: context,
+        useRootNavigator: true,
+        builder: (dialogContext) {
+          return AlertDialog(
+            backgroundColor: formBg,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            title: const Text(
+              '과제명 입력 안내',
+              style: TextStyle(
+                color: formText,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            content: const Text(
+              '과제명을 입력해 주세요.',
+              style: TextStyle(
+                color: formMuted,
+                fontSize: 14,
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(
+                    dialogContext,
+                    rootNavigator: true,
+                  ).pop();
+                },
+                child: const Text(
+                  '확인',
+                  style: TextStyle(
+                    color: formBrown,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
       );
       return;
     }
