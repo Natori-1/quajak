@@ -1,6 +1,6 @@
 
 import 'package:flutter/material.dart';
-
+import '../cookie/cookie_page.dart';
 import 'task_management.dart';
 import 'task_model.dart';
 import 'task_form.dart';
@@ -55,11 +55,34 @@ class _HomePageState extends State<HomePage> {
   }
 
   // 과제 완료 상태 변경
-  void _toggleTask(Assignment task, bool completed) {
-    setState(() {
-      task.completed = completed;
-    });
+// 과제 완료 상태 변경
+void _toggleTask(Assignment task, bool completed) {
+
+  // 변경하기 전 모든 과제가 완료되었는지 확인
+  final wasAllCompleted =
+      _tasks.isNotEmpty &&
+      _tasks.every((task) => task.completed);
+
+  setState(() {
+    task.completed = completed;
+  });
+
+  // 변경 후 모든 과제가 완료되었는지 확인
+  final isAllCompleted =
+      _tasks.isNotEmpty &&
+      _tasks.every((task) => task.completed);
+
+  // 마지막 과제까지 완료된 순간 포춘쿠키 실행
+  if (!wasAllCompleted && isAllCompleted) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return const FortuneCookieDialog();
+      },
+    );
   }
+}
 
   @override
   Widget build(BuildContext context) {
