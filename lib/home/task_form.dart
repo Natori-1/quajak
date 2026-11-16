@@ -149,6 +149,7 @@ class _TaskFormState extends State<TaskForm> {
     );
   }
 
+  // 일반 선택 버튼
   Widget _choiceButtons({
     required List<String> options,
     required String selected,
@@ -169,6 +170,48 @@ class _TaskFormState extends State<TaskForm> {
           showCheckmark: false,
           labelStyle: TextStyle(
             color: isSelected ? Colors.white : formMuted,
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  // 중요도 신호등 색상 버튼
+  Widget _priorityButtons() {
+    const colors = {
+      '높음': Color(0xFFC4514B),
+      '보통': Color(0xFFA47724),
+      '낮음': Color(0xFF527B49),
+    };
+
+    const backgrounds = {
+      '높음': Color(0xFFFBE2DF),
+      '보통': Color(0xFFFFF0CC),
+      '낮음': Color(0xFFE4F0DF),
+    };
+
+    return Wrap(
+      spacing: 8,
+      children: ['높음', '보통', '낮음'].map((value) {
+        final selected = _priority == value;
+        final color = colors[value]!;
+
+        return ChoiceChip(
+          label: Text(value),
+          selected: selected,
+          onSelected: (_) {
+            setState(() => _priority = value);
+          },
+          selectedColor: backgrounds[value]!,
+          backgroundColor: Colors.white,
+          side: BorderSide(
+            color: selected ? color : formLine,
+          ),
+          showCheckmark: false,
+          labelStyle: TextStyle(
+            color: selected ? color : formMuted,
             fontSize: 12,
             fontWeight: FontWeight.w600,
           ),
@@ -241,13 +284,7 @@ class _TaskFormState extends State<TaskForm> {
 
               _sectionTitle('중요도'),
 
-              _choiceButtons(
-                options: const ['높음', '보통', '낮음'],
-                selected: _priority,
-                onChanged: (value) {
-                  setState(() => _priority = value);
-                },
-              ),
+              _priorityButtons(),
 
               const SizedBox(height: 20),
 

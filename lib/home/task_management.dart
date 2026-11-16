@@ -195,11 +195,15 @@ class TaskManagement extends StatelessWidget {
               color: const Color(0xFFFFE9D8),
               borderRadius: BorderRadius.circular(25),
             ),
-            child: const Icon(
-              Icons.sports_martial_arts_rounded,
-              color: taskBrown,
-              size: 43,
-            ),
+            child: ClipRRect(
+  borderRadius: BorderRadius.circular(25),
+  child: Image.asset(
+    'assets/images/kwajak_character.png',
+    width: 76,
+    height: 76,
+    fit: BoxFit.contain,
+  ),
+),
           ),
         ],
       ),

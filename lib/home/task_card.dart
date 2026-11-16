@@ -16,8 +16,67 @@ class TaskCard extends StatelessWidget {
   final VoidCallback onDelete;
   final ValueChanged<bool> onCompletionChanged;
 
+  // 중요도별 글자 색상
+  Color _priorityColor(String priority) {
+    switch (priority) {
+      case '높음':
+        return const Color(0xFFC4514B);
+      case '보통':
+        return const Color(0xFFA47724);
+      case '낮음':
+        return const Color(0xFF527B49);
+      default:
+        return const Color(0xFF9B6848);
+    }
+  }
+
+  // 중요도별 배경 색상
+  Color _priorityBackground(String priority) {
+    switch (priority) {
+      case '높음':
+        return const Color(0xFFFBE2DF);
+      case '보통':
+        return const Color(0xFFFFF0CC);
+      case '낮음':
+        return const Color(0xFFE4F0DF);
+      default:
+        return const Color(0xFFF5EDE7);
+    }
+  }
+
+  // 과제 종류별 색상
+  Color _subjectColor(String subject) {
+    switch (subject) {
+      case '전공':
+        return const Color(0xFF8B6B9C);
+      case '교양':
+        return const Color(0xFF6B91A5);
+      default:
+        return const Color(0xFF9B6848);
+    }
+  }
+
+  Color _subjectBackground(String subject) {
+    switch (subject) {
+      case '전공':
+        return const Color(0xFFF0E8F5);
+      case '교양':
+        return const Color(0xFFE7F0F5);
+      default:
+        return const Color(0xFFF5EDE7);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final priorityColor = _priorityColor(task.priority);
+    final priorityBackground =
+        _priorityBackground(task.priority);
+
+    final subjectColor = _subjectColor(task.subject);
+    final subjectBackground =
+        _subjectBackground(task.subject);
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
@@ -47,6 +106,7 @@ class TaskCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // 과제명
                 Text(
                   task.title,
                   style: TextStyle(
@@ -59,32 +119,53 @@ class TaskCard extends StatelessWidget {
                   ),
                 ),
 
-                const SizedBox(height: 7),
+                const SizedBox(height: 8),
 
-                Row(
+                // 전공 / 교양 / 중요도 / 마감일
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
-                    // 중요도
+                    // 과제 종류
                     Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 9,
+                        horizontal: 8,
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: task.priority == '높음'
-                            ? const Color(0xFFFFE5E0)
-                            : const Color(0xFFF5EDE7),
+                        color: subjectBackground,
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
-                        task.priority,
-                        style: const TextStyle(
+                        task.subject,
+                        style: TextStyle(
                           fontSize: 11,
-                          color: Color(0xFF9B6848),
+                          fontWeight: FontWeight.w600,
+                          color: subjectColor,
                         ),
                       ),
                     ),
 
-                    const SizedBox(width: 9),
+                    // 중요도
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: priorityBackground,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        task.priority,
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: priorityColor,
+                        ),
+                      ),
+                    ),
 
                     // 마감일
                     Text(
