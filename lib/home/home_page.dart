@@ -1,12 +1,19 @@
-
 import 'package:flutter/material.dart';
+
 import '../cookie/cookie_page.dart';
 import 'task_management.dart';
 import 'task_model.dart';
 import 'task_form.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  const HomePage({
+    super.key,
+    required this.tasks,
+    required this.onTasksChanged,
+  });
+
+  final List<Assignment> tasks;
+  final VoidCallback onTasksChanged;
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -14,8 +21,6 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   String _filter = '전체';
-
-  final List<Assignment> _tasks = [];
 
   // 과제 추가 및 수정
   Future<void> _openTaskForm({Assignment? task}) async {
@@ -30,22 +35,27 @@ class _HomePageState extends State<HomePage> {
 
     setState(() {
       if (task == null) {
-        _tasks.add(result);
+        widget.tasks.add(result);
       } else {
-        final index = _tasks.indexOf(task);
+        final index = widget.tasks.indexOf(task);
 
         if (index >= 0) {
-          _tasks[index] = result;
+          widget.tasks[index] = result;
         }
       }
     });
+
+    // 캘린더에도 변경 사항 반영
+    widget.onTasksChanged();
   }
 
   // 과제 삭제
   void _deleteTask(Assignment task) {
     setState(() {
-      _tasks.remove(task);
+      widget.tasks.remove(task);
     });
+
+    widget.onTasksChanged();
 
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
@@ -55,34 +65,33 @@ class _HomePageState extends State<HomePage> {
   }
 
   // 과제 완료 상태 변경
-// 과제 완료 상태 변경
-void _toggleTask(Assignment task, bool completed) {
+  void _toggleTask(Assignment task, bool completed) {
+    final wasAllCompleted =
+        widget.tasks.isNotEmpty &&
+        widget.tasks.every((item) => item.completed);
 
-  // 변경하기 전 모든 과제가 완료되었는지 확인
-  final wasAllCompleted =
-      _tasks.isNotEmpty &&
-      _tasks.every((task) => task.completed);
+    setState(() {
+      task.completed = completed;
+    });
 
-  setState(() {
-    task.completed = completed;
-  });
+    // 캘린더에도 완료 상태 반영
+    widget.onTasksChanged();
 
-  // 변경 후 모든 과제가 완료되었는지 확인
-  final isAllCompleted =
-      _tasks.isNotEmpty &&
-      _tasks.every((task) => task.completed);
+    final isAllCompleted =
+        widget.tasks.isNotEmpty &&
+        widget.tasks.every((item) => item.completed);
 
-  // 마지막 과제까지 완료된 순간 포춘쿠키 실행
-  if (!wasAllCompleted && isAllCompleted) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) {
-        return const FortuneCookieDialog();
-      },
-    );
+    // 마지막 과제 완료 시 포춘쿠키 실행
+    if (!wasAllCompleted && isAllCompleted) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) {
+          return const FortuneCookieDialog();
+        },
+      );
+    }
   }
-}
 
   @override
   Widget build(BuildContext context) {
@@ -91,7 +100,7 @@ void _toggleTask(Assignment task, bool completed) {
 
       body: SafeArea(
         child: TaskManagement(
-          tasks: _tasks,
+          tasks: widget.tasks,
           filter: _filter,
 
           onFilterChanged: (value) {
