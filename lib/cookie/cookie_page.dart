@@ -1,6 +1,11 @@
 
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+// 저장된 쿠키 메시지를 화면에 전달하는 변수
+final ValueNotifier<List<String>> savedCookieMessages =
+    ValueNotifier<List<String>>([]);
 
 // 콰작! 색상
 const Color cookieBg = Color(0xFFFFF8F5);
@@ -21,24 +26,19 @@ class CookiePage extends StatefulWidget {
 }
 
 class _CookiePageState extends State<CookiePage> {
-  String _selectedCategory = '전체';
+ 
+  @override
+void initState() {
+  super.initState();
+  _loadSavedCookies();
+}
 
-  final List<String> _categories = [
-    '전체',
-    '행운',
-    '위로',
-    '도전',
-  ];
+// 저장된 쿠키 불러오기
+Future<void> _loadSavedCookies() async {
+  final prefs = await SharedPreferences.getInstance();
 
-  //나중에 삭제할 부분
-  void _showFortuneCookie() {
-  showDialog(
-    context: context,
-    barrierDismissible: false,
-    builder: (context) {
-      return const FortuneCookieDialog();
-    },
-  );
+  savedCookieMessages.value =
+      prefs.getStringList('saved_cookies') ?? [];
 }
 
   @override
@@ -111,74 +111,7 @@ class _CookiePageState extends State<CookiePage> {
                 ],
               ),
             ),
-            //나중에 삭제할부분
-                        const SizedBox(height: 15),
-
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _showFortuneCookie,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: cookieBrown,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 15),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                ),
-                child: const Text(
-                  '🥠 포춘쿠키 깨뜨리기!',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 15,
-                  ),
-                ),
-              ),
-            ),
-
-
-
-            const SizedBox(height: 25),
-
-            // 카테고리
-            const Text(
-              '쿠키 카테고리',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: cookieDark,
-              ),
-            ),
-
-            const SizedBox(height: 12),
-
-            Wrap(
-              spacing: 8,
-              children: _categories.map((category) {
-                final selected =
-                    _selectedCategory == category;
-
-                return ChoiceChip(
-                  label: Text(category),
-                  selected: selected,
-                  onSelected: (_) {
-                    setState(() {
-                      _selectedCategory = category;
-                    });
-                  },
-                  selectedColor: cookieBrown,
-                  backgroundColor: cookieCard,
-                  labelStyle: TextStyle(
-                    color: selected
-                        ? Colors.white
-                        : cookieMuted,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  side: BorderSide.none,
-                );
-              }).toList(),
-            ),
-
+           
             const SizedBox(height: 22),
 
             const Text(
@@ -193,42 +126,93 @@ class _CookiePageState extends State<CookiePage> {
             const SizedBox(height: 12),
 
             // 아직 받은 쿠키가 없을 때
-            Container(
-              padding: const EdgeInsets.symmetric(
-                vertical: 35,
-                horizontal: 20,
-              ),
-              decoration: BoxDecoration(
-                color: cookieCard,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: const Column(
-                children: [
-                  Icon(
-                    Icons.cookie_outlined,
-                    size: 42,
-                    color: cookieMuted,
-                  ),
-                  SizedBox(height: 12),
-                  Text(
-                    '아직 모아둔 쿠키가 없어.',
-                    style: TextStyle(
-                      color: cookieDark,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  SizedBox(height: 5),
-                  Text(
-                    '과제를 모두 완료하고 첫 쿠키를 받아 봐!',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: cookieMuted,
-                    ),
-                  ),
-                ],
+           ValueListenableBuilder<List<String>>(
+  valueListenable: savedCookieMessages,
+  builder: (context, cookies, child) {
+
+    // 저장된 쿠키가 없을 때
+    if (cookies.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.symmetric(
+          vertical: 35,
+          horizontal: 20,
+        ),
+        decoration: BoxDecoration(
+          color: cookieCard,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: const Column(
+          children: [
+            Icon(
+              Icons.cookie_outlined,
+              size: 42,
+              color: cookieMuted,
+            ),
+            SizedBox(height: 12),
+            Text(
+              '아직 모아둔 쿠키가 없어.',
+              style: TextStyle(
+                color: cookieDark,
+                fontWeight: FontWeight.bold,
               ),
             ),
+            SizedBox(height: 5),
+            Text(
+              '과제를 모두 완료하고 첫 쿠키를 받아 봐!',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 12,
+                color: cookieMuted,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // 저장된 쿠키가 있을 때
+    return Column(
+      children: cookies.reversed.map((message) {
+        return Container(
+          width: double.infinity,
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            color: cookieCard,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: cookieBrown.withOpacity(0.06),
+                blurRadius: 10,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              const Text(
+                '🥠',
+                style: TextStyle(fontSize: 32),
+              ),
+              const SizedBox(width: 15),
+              Expanded(
+                child: Text(
+                  message,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: cookieDark,
+                    height: 1.5,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      }).toList(),
+    );
+  },
+),
           ],
         ),
       ),
@@ -288,13 +272,37 @@ class _FortuneCookieDialogState
         _messages[Random().nextInt(_messages.length)];
   }
 
-  void _breakCookie() {
-    if (_isComplete) return;
+  // 쿠키 깨뜨리기
+Future<void> _breakCookie() async {
+  if (_isComplete) return;
 
-    setState(() {
-      _tapCount++;
-    });
+  setState(() {
+    _tapCount++;
+  });
+
+  // 6번 터치해서 쿠키가 깨졌다면 저장
+  if (_isComplete) {
+    await _saveCookie();
   }
+}
+
+// 쿠키 영구 저장
+Future<void> _saveCookie() async {
+  final prefs = await SharedPreferences.getInstance();
+
+  final savedCookies =
+      prefs.getStringList('saved_cookies') ?? [];
+
+  savedCookies.add(_message);
+
+  await prefs.setStringList(
+    'saved_cookies',
+    savedCookies,
+  );
+
+  // 쿠키함 화면에도 변경 사항 전달
+  savedCookieMessages.value = List<String>.from(savedCookies);
+}
 
   @override
   Widget build(BuildContext context) {

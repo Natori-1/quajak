@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 
 import 'common/app_theme.dart';
@@ -8,6 +9,7 @@ import 'home/task_model.dart';
 import 'calendar/calendar_page.dart';
 import 'cookie/cookie_page.dart';
 import 'setting_page.dart';
+import 'login/login_page.dart';
 
 void main() {
   runApp(const KwajakApp());
@@ -21,7 +23,10 @@ class KwajakApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: AppTheme.theme,
-      home: const MainPage(),
+      home: const LoginPage(),
+      routes: {
+        '/main': (context) => const MainPage(),
+      },
     );
   }
 }
@@ -51,11 +56,9 @@ class _MainPageState extends State<MainPage> {
         tasks: _tasks,
         onTasksChanged: _refreshTasks,
       ),
-
       CalendarPage(
         tasks: _tasks,
       ),
-
       const CookiePage(),
       const SettingPage(),
     ];
@@ -67,7 +70,6 @@ class _MainPageState extends State<MainPage> {
           children: pages,
         ),
       ),
-
       bottomNavigationBar: AppBottomNav(
         currentIndex: selectedIndex,
         onTap: (index) {
