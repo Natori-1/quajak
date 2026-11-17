@@ -1,5 +1,6 @@
 
 import 'package:flutter/material.dart';
+import 'signup_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -175,6 +176,48 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   ),
                 ),
+                const SizedBox(height: 15),
+
+Row(
+  mainAxisAlignment: MainAxisAlignment.center,
+  children: [
+    TextButton(
+      onPressed: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const SignupPage(),
+          ),
+        );
+      },
+      child: const Text(
+        '회원가입',
+        style: TextStyle(
+          color: Color(0xFF9B6848),
+        ),
+      ),
+    ),
+
+    const Text('|'),
+
+    TextButton(
+      onPressed: () {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('비밀번호 찾기 기능은 준비 중입니다.'),
+          ),
+        );
+      },
+      child: const Text(
+        '비밀번호 찾기',
+        style: TextStyle(
+          color: Color(0xFF9B6848),
+        ),
+      ),
+    ),
+  ],
+),
+
               ],
             ),
           ),
