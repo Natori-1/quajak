@@ -9,6 +9,8 @@ import 'calendar/calendar_page.dart';
 import 'cookie/cookie_page.dart';
 import 'setting_page.dart';
 import 'cookie/cookie_page.dart';
+import 'login/login_page.dart';
+
 
 void main() {
   runApp(const KwajakApp());
@@ -20,10 +22,14 @@ class KwajakApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.theme,
-      home: const MainPage(),
-    );
+  debugShowCheckedModeBanner: false,
+  theme: AppTheme.theme,
+  home: const LoginPage(),
+
+  routes: {
+    '/main': (context) => const MainPage(),
+  },
+);
   }
 }
 
