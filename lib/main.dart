@@ -10,6 +10,8 @@ import 'calendar/calendar_page.dart';
 import 'cookie/cookie_page.dart';
 import 'setting_page.dart';
 import 'login/login_page.dart';
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   runApp(const KwajakApp());
@@ -38,15 +40,63 @@ class MainPage extends StatefulWidget {
   State<MainPage> createState() => _MainPageState();
 }
 
+
 class _MainPageState extends State<MainPage> {
   int selectedIndex = 0;
 
   // 모든 페이지에서 공유하는 과제 데이터
   final List<Assignment> _tasks = [];
 
-  // 과제 데이터 변경 시 화면 갱신
+  // 앱 실행 시 저장된 과제 불러오기
+  @override
+  void initState() {
+    super.initState();
+    _loadTasks();
+  }
+
+  Future<void> _loadTasks() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    final savedData = prefs.getString('saved_tasks');
+
+    if (savedData == null) return;
+
+    try {
+      final List<dynamic> decodedData = jsonDecode(savedData);
+
+      final loadedTasks = decodedData.map((item) {
+        return Assignment.fromJson(
+          Map<String, dynamic>.from(item),
+        );
+      }).toList();
+
+      if (!mounted) return;
+
+      setState(() {
+        _tasks
+          ..clear()
+          ..addAll(loadedTasks);
+      });
+    } catch (e) {
+      debugPrint('과제 불러오기 실패: $e');
+    }
+  }
+
+  // 과제 목록을 휴대폰에 저장
+  Future<void> _saveTasks() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    final encodedData = jsonEncode(
+      _tasks.map((task) => task.toJson()).toList(),
+    );
+
+    await prefs.setString('saved_tasks', encodedData);
+  }
+
+  // 과제 데이터 변경 시 화면 갱신 및 저장
   void _refreshTasks() {
     setState(() {});
+    _saveTasks();
   }
 
   @override
