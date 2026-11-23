@@ -1,5 +1,6 @@
 
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'signup_page.dart';
 
 class LoginPage extends StatefulWidget {
@@ -17,19 +18,73 @@ class _LoginPageState extends State<LoginPage> {
       TextEditingController();
 
   bool _hidePassword = true;
+  bool _isLoading = false;
 
-  void _login() {
-    if (_idController.text.trim().isEmpty ||
-        _pwController.text.isEmpty) {
+  Future<void> _login() async {
+    final email = _idController.text.trim();
+    final password = _pwController.text;
+
+    if (email.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('아이디와 비밀번호를 입력해 주세요.'),
+          content: Text('이메일과 비밀번호를 입력해 주세요.'),
         ),
       );
       return;
     }
 
-    Navigator.pushReplacementNamed(context, '/main');
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+      if (!mounted) return;
+
+      Navigator.pushReplacementNamed(context, '/main');
+
+    } on FirebaseAuthException catch (e) {
+      String message = '로그인에 실패했습니다.';
+
+      if (e.code == 'user-not-found') {
+        message = '가입되지 않은 이메일입니다.';
+      } else if (e.code == 'wrong-password' ||
+          e.code == 'invalid-credential') {
+        message = '이메일 또는 비밀번호가 올바르지 않습니다.';
+      } else if (e.code == 'invalid-email') {
+        message = '이메일 형식이 올바르지 않습니다.';
+      } else if (e.code == 'too-many-requests') {
+        message = '로그인 시도가 너무 많습니다. 잠시 후 다시 시도해 주세요.';
+      }
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+
+    } catch (e) {
+      debugPrint('로그인 오류: $e');
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('로그인 중 오류가 발생했습니다.'),
+        ),
+      );
+
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   @override
@@ -105,8 +160,9 @@ class _LoginPageState extends State<LoginPage> {
 
                 TextField(
                   controller: _idController,
+                  keyboardType: TextInputType.emailAddress,
                   decoration: InputDecoration(
-                    hintText: '아이디를 입력해 줘',
+                    hintText: '이메일을 입력해 줘',
                     filled: true,
                     fillColor: Colors.white,
                     prefixIcon: const Icon(
@@ -159,7 +215,7 @@ class _LoginPageState extends State<LoginPage> {
                   width: double.infinity,
                   height: 53,
                   child: ElevatedButton(
-                    onPressed: _login,
+                    onPressed: _isLoading ? null : _login,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: brown,
                       foregroundColor: Colors.white,
@@ -167,57 +223,60 @@ class _LoginPageState extends State<LoginPage> {
                         borderRadius: BorderRadius.circular(15),
                       ),
                     ),
-                    child: const Text(
-                      '로그인',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                    child: _isLoading
+                        ? const CircularProgressIndicator(
+                            color: Colors.white,
+                          )
+                        : const Text(
+                            '로그인',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                   ),
                 ),
+
                 const SizedBox(height: 15),
 
-Row(
-  mainAxisAlignment: MainAxisAlignment.center,
-  children: [
-    TextButton(
-      onPressed: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const SignupPage(),
-          ),
-        );
-      },
-      child: const Text(
-        '회원가입',
-        style: TextStyle(
-          color: Color(0xFF9B6848),
-        ),
-      ),
-    ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    TextButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                const SignupPage(),
+                          ),
+                        );
+                      },
+                      child: const Text(
+                        '회원가입',
+                        style: TextStyle(color: brown),
+                      ),
+                    ),
 
-    const Text('|'),
+                    const Text('|'),
 
-    TextButton(
-      onPressed: () {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('비밀번호 찾기 기능은 준비 중입니다.'),
-          ),
-        );
-      },
-      child: const Text(
-        '비밀번호 찾기',
-        style: TextStyle(
-          color: Color(0xFF9B6848),
-        ),
-      ),
-    ),
-  ],
-),
-
+                    TextButton(
+                      onPressed: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              '비밀번호 찾기 기능은 준비 중입니다.',
+                            ),
+                          ),
+                        );
+                      },
+                      child: const Text(
+                        '비밀번호 찾기',
+                        style: TextStyle(color: brown),
+                      ),
+                    ),
+                  ],
+                ),
               ],
             ),
           ),

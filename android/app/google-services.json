@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1060866289354",
+    "project_id": "kwajak-e4820",
+    "storage_bucket": "kwajak-e4820.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1060866289354:android:88bf46938af4d1cc944e33",
+        "android_client_info": {
+          "package_name": "com.example.flutter_application_1"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyATtjrUd3YrGZCamrzjOQiX7DOm1Gn-e-c"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

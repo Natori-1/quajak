@@ -1,6 +1,9 @@
 
 import 'package:flutter/material.dart';
 
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
+
 import 'common/app_theme.dart';
 import 'common/bottom_nav.dart';
 
@@ -10,13 +13,18 @@ import 'calendar/calendar_page.dart';
 import 'cookie/cookie_page.dart';
 import 'setting_page.dart';
 import 'login/login_page.dart';
-import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
   runApp(const KwajakApp());
 }
-
 class KwajakApp extends StatelessWidget {
   const KwajakApp({super.key});
 
@@ -48,6 +56,8 @@ class _MainPageState extends State<MainPage> {
   final List<Assignment> _tasks = [];
 
   // 앱 실행 시 저장된 과제 불러오기
+  
+  // 현재 로그인한 사용자의 과제 불러오기
   @override
   void initState() {
     super.initState();
@@ -55,18 +65,31 @@ class _MainPageState extends State<MainPage> {
   }
 
   Future<void> _loadTasks() async {
-    final prefs = await SharedPreferences.getInstance();
-
-    final savedData = prefs.getString('saved_tasks');
-
-    if (savedData == null) return;
-
     try {
-      final List<dynamic> decodedData = jsonDecode(savedData);
+      // 현재 로그인한 사용자 확인
+      final user = FirebaseAuth.instance.currentUser;
 
-      final loadedTasks = decodedData.map((item) {
+      if (user == null) return;
+
+      // 해당 사용자의 Firestore 문서 가져오기
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .collection('tasks')
+          .doc('current')
+          .get();
+
+      if (!doc.exists) return;
+
+      final data = doc.data();
+      final savedData = data?['items'];
+
+      if (savedData is! List) return;
+
+      // 저장된 데이터를 Assignment 객체로 변환
+      final loadedTasks = savedData.map((item) {
         return Assignment.fromJson(
-          Map<String, dynamic>.from(item),
+          Map<String, dynamic>.from(item as Map),
         );
       }).toList();
 
@@ -77,23 +100,40 @@ class _MainPageState extends State<MainPage> {
           ..clear()
           ..addAll(loadedTasks);
       });
+
     } catch (e) {
       debugPrint('과제 불러오기 실패: $e');
     }
   }
 
-  // 과제 목록을 휴대폰에 저장
+  // 현재 사용자의 과제를 Firestore에 저장
   Future<void> _saveTasks() async {
-    final prefs = await SharedPreferences.getInstance();
+    try {
+      final user = FirebaseAuth.instance.currentUser;
 
-    final encodedData = jsonEncode(
-      _tasks.map((task) => task.toJson()).toList(),
-    );
+      if (user == null) return;
 
-    await prefs.setString('saved_tasks', encodedData);
+      final taskData = _tasks.map((task) {
+        return task.toJson();
+      }).toList();
+
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .collection('tasks')
+          .doc('current')
+          .set({
+        'items': taskData,
+      });
+
+      debugPrint('과제 저장 성공');
+
+    } catch (e) {
+      debugPrint('과제 저장 실패: $e');
+    }
   }
 
-  // 과제 데이터 변경 시 화면 갱신 및 저장
+  // 과제 변경 시 화면 갱신 및 서버 저장
   void _refreshTasks() {
     setState(() {});
     _saveTasks();
@@ -130,4 +170,5 @@ class _MainPageState extends State<MainPage> {
       ),
     );
   }
+
 }
