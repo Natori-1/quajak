@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../cookie/cookie_page.dart';
+import '../notification/notification_service.dart';
+
 import 'task_management.dart';
 import 'task_model.dart';
 import 'task_form.dart';
@@ -33,6 +35,11 @@ class _HomePageState extends State<HomePage> {
 
     if (!mounted || result == null) return;
 
+    // 수정하는 경우 기존 알림 취소
+    if (task != null) {
+      await NotificationService.cancelTask(task);
+    }
+
     setState(() {
       if (task == null) {
         widget.tasks.add(result);
@@ -45,12 +52,20 @@ class _HomePageState extends State<HomePage> {
       }
     });
 
-    // 캘린더에도 변경 사항 반영
+    // 새 마감기한에 맞춰 알림 예약
+    await NotificationService.scheduleTask(result);
+
+    // 캘린더 및 데이터 저장 반영
     widget.onTasksChanged();
   }
 
   // 과제 삭제
-  void _deleteTask(Assignment task) {
+  Future<void> _deleteTask(Assignment task) async {
+    // 해당 과제 알림 취소
+    await NotificationService.cancelTask(task);
+
+    if (!mounted) return;
+
     setState(() {
       widget.tasks.remove(task);
     });
@@ -65,7 +80,10 @@ class _HomePageState extends State<HomePage> {
   }
 
   // 과제 완료 상태 변경
-  void _toggleTask(Assignment task, bool completed) {
+  Future<void> _toggleTask(
+    Assignment task,
+    bool completed,
+  ) async {
     final wasAllCompleted =
         widget.tasks.isNotEmpty &&
         widget.tasks.every((item) => item.completed);
@@ -73,6 +91,16 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       task.completed = completed;
     });
+
+    // 완료 시 알림 취소
+    if (completed) {
+      await NotificationService.cancelTask(task);
+    } else {
+      // 완료 취소 시 알림 재예약
+      await NotificationService.scheduleTask(task);
+    }
+
+    if (!mounted) return;
 
     // 캘린더에도 완료 상태 반영
     widget.onTasksChanged();

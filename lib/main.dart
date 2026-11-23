@@ -1,7 +1,9 @@
 
 import 'package:flutter/material.dart';
-
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 import 'firebase_options.dart';
 
 import 'common/app_theme.dart';
@@ -13,18 +15,22 @@ import 'calendar/calendar_page.dart';
 import 'cookie/cookie_page.dart';
 import 'setting_page.dart';
 import 'login/login_page.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'notification/notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Firebase 초기화
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
+  // 알림 서비스 초기화
+  await NotificationService.initialize();
+
   runApp(const KwajakApp());
 }
+
 class KwajakApp extends StatelessWidget {
   const KwajakApp({super.key});
 
@@ -48,30 +54,25 @@ class MainPage extends StatefulWidget {
   State<MainPage> createState() => _MainPageState();
 }
 
-
 class _MainPageState extends State<MainPage> {
   int selectedIndex = 0;
 
   // 모든 페이지에서 공유하는 과제 데이터
   final List<Assignment> _tasks = [];
 
-  // 앱 실행 시 저장된 과제 불러오기
-  
-  // 현재 로그인한 사용자의 과제 불러오기
   @override
   void initState() {
     super.initState();
     _loadTasks();
   }
 
+  // 현재 로그인한 사용자의 과제 불러오기
   Future<void> _loadTasks() async {
     try {
-      // 현재 로그인한 사용자 확인
       final user = FirebaseAuth.instance.currentUser;
 
       if (user == null) return;
 
-      // 해당 사용자의 Firestore 문서 가져오기
       final doc = await FirebaseFirestore.instance
           .collection('users')
           .doc(user.uid)
@@ -100,6 +101,9 @@ class _MainPageState extends State<MainPage> {
           ..clear()
           ..addAll(loadedTasks);
       });
+
+      // 저장된 과제들의 알림 복구
+      await NotificationService.rescheduleAll(_tasks);
 
     } catch (e) {
       debugPrint('과제 불러오기 실패: $e');
@@ -170,5 +174,4 @@ class _MainPageState extends State<MainPage> {
       ),
     );
   }
-
 }

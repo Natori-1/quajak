@@ -1,4 +1,3 @@
-
 class Assignment {
   Assignment({
     required this.title,
@@ -8,7 +7,9 @@ class Assignment {
     required this.estimatedTime,
     this.memo = '',
     this.completed = false,
-  });
+    int? notificationId,
+  }) : notificationId = notificationId ??
+            DateTime.now().microsecondsSinceEpoch.remainder(1000000000);
 
   String title;
   String subject;
@@ -18,7 +19,9 @@ class Assignment {
   String memo;
   bool completed;
 
-  // 과제 객체를 저장 가능한 형태로 변환
+  // 과제별 고유 알림 ID
+  int notificationId;
+
   Map<String, dynamic> toJson() {
     return {
       'title': title,
@@ -28,10 +31,10 @@ class Assignment {
       'estimatedTime': estimatedTime,
       'memo': memo,
       'completed': completed,
+      'notificationId': notificationId,
     };
   }
 
-  // 저장된 데이터를 과제 객체로 변환
   factory Assignment.fromJson(Map<String, dynamic> json) {
     return Assignment(
       title: json['title'] as String,
@@ -41,6 +44,7 @@ class Assignment {
       estimatedTime: json['estimatedTime'] as String,
       memo: json['memo'] as String? ?? '',
       completed: json['completed'] as bool? ?? false,
+      notificationId: json['notificationId'] as int?,
     );
   }
 }
