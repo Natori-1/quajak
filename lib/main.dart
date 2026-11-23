@@ -1,5 +1,6 @@
-
 import 'package:flutter/material.dart';
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'common/app_theme.dart';
 import 'common/bottom_nav.dart';
@@ -10,10 +11,15 @@ import 'calendar/calendar_page.dart';
 import 'cookie/cookie_page.dart';
 import 'setting_page.dart';
 import 'login/login_page.dart';
-import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart';
 
-void main() {
+import 'notification/notification_service.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // 알림 서비스 초기화
+  await NotificationService.initialize();
+
   runApp(const KwajakApp());
 }
 
@@ -40,20 +46,19 @@ class MainPage extends StatefulWidget {
   State<MainPage> createState() => _MainPageState();
 }
 
-
 class _MainPageState extends State<MainPage> {
   int selectedIndex = 0;
 
   // 모든 페이지에서 공유하는 과제 데이터
   final List<Assignment> _tasks = [];
 
-  // 앱 실행 시 저장된 과제 불러오기
   @override
   void initState() {
     super.initState();
     _loadTasks();
   }
 
+  // 앱 실행 시 저장된 과제 불러오기
   Future<void> _loadTasks() async {
     final prefs = await SharedPreferences.getInstance();
 
@@ -77,12 +82,16 @@ class _MainPageState extends State<MainPage> {
           ..clear()
           ..addAll(loadedTasks);
       });
+
+      // 저장된 과제들의 알림 복구
+      await NotificationService.rescheduleAll(_tasks);
+
     } catch (e) {
       debugPrint('과제 불러오기 실패: $e');
     }
   }
 
-  // 과제 목록을 휴대폰에 저장
+  // 과제 목록 휴대폰에 저장
   Future<void> _saveTasks() async {
     final prefs = await SharedPreferences.getInstance();
 
