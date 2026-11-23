@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'task_model.dart';
 
@@ -28,6 +29,10 @@ class _TaskFormState extends State<TaskForm> {
   String _estimatedTime = '1시간';
 
   DateTime _deadline = DateTime.now();
+  TimeOfDay _deadlineTime = const TimeOfDay(
+    hour: 23,
+    minute: 59,
+  );
 
   @override
   void initState() {
@@ -41,7 +46,13 @@ class _TaskFormState extends State<TaskForm> {
       _subject = task.subject;
       _priority = task.priority;
       _estimatedTime = task.estimatedTime;
+
       _deadline = task.deadline;
+
+      _deadlineTime = TimeOfDay(
+        hour: task.deadline.hour,
+        minute: task.deadline.minute,
+      );
     }
   }
 
@@ -52,6 +63,7 @@ class _TaskFormState extends State<TaskForm> {
     super.dispose();
   }
 
+  // 날짜 선택
   Future<void> _selectDeadline() async {
     final selected = await showDatePicker(
       context: context,
@@ -73,7 +85,46 @@ class _TaskFormState extends State<TaskForm> {
 
     if (selected != null) {
       setState(() {
-        _deadline = selected;
+        _deadline = DateTime(
+          selected.year,
+          selected.month,
+          selected.day,
+          _deadlineTime.hour,
+          _deadlineTime.minute,
+        );
+      });
+    }
+  }
+
+  // 시간 선택
+  Future<void> _selectDeadlineTime() async {
+    final selected = await showTimePicker(
+      context: context,
+      initialTime: _deadlineTime,
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: formBrown,
+              surface: Colors.white,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (selected != null) {
+      setState(() {
+        _deadlineTime = selected;
+
+        _deadline = DateTime(
+          _deadline.year,
+          _deadline.month,
+          _deadline.day,
+          selected.hour,
+          selected.minute,
+        );
       });
     }
   }
@@ -128,10 +179,19 @@ class _TaskFormState extends State<TaskForm> {
       return;
     }
 
+    // 날짜와 시간을 하나로 결합
+    final finalDeadline = DateTime(
+      _deadline.year,
+      _deadline.month,
+      _deadline.day,
+      _deadlineTime.hour,
+      _deadlineTime.minute,
+    );
+
     final result = Assignment(
       title: _titleController.text.trim(),
       subject: _subject,
-      deadline: _deadline,
+      deadline: finalDeadline,
       priority: _priority,
       estimatedTime: _estimatedTime,
       memo: _memoController.text.trim(),
@@ -259,6 +319,49 @@ class _TaskFormState extends State<TaskForm> {
     );
   }
 
+  // 날짜 및 시간 선택 UI
+  Widget _deadlinePicker({
+    required VoidCallback onTap,
+    required IconData icon,
+    required String value,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(13),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(15),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(13),
+          border: Border.all(color: formLine),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              icon,
+              size: 18,
+              color: formBrown,
+            ),
+            const SizedBox(width: 10),
+            Text(
+              value,
+              style: const TextStyle(
+                color: formText,
+                fontSize: 13,
+              ),
+            ),
+            const Spacer(),
+            const Icon(
+              Icons.keyboard_arrow_down,
+              color: formMuted,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isEditing = widget.task != null;
@@ -329,42 +432,22 @@ class _TaskFormState extends State<TaskForm> {
 
               _sectionTitle('마감일'),
 
-              InkWell(
+              _deadlinePicker(
                 onTap: _selectDeadline,
-                borderRadius: BorderRadius.circular(13),
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(15),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(13),
-                    border: Border.all(color: formLine),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(
-                        Icons.calendar_today_outlined,
-                        size: 18,
-                        color: formBrown,
-                      ),
-                      const SizedBox(width: 10),
-                      Text(
-                        '${_deadline.year}년 '
-                        '${_deadline.month}월 '
-                        '${_deadline.day}일',
-                        style: const TextStyle(
-                          color: formText,
-                          fontSize: 13,
-                        ),
-                      ),
-                      const Spacer(),
-                      const Icon(
-                        Icons.keyboard_arrow_down,
-                        color: formMuted,
-                      ),
-                    ],
-                  ),
-                ),
+                icon: Icons.calendar_today_outlined,
+                value: '${_deadline.year}년 '
+                    '${_deadline.month}월 '
+                    '${_deadline.day}일',
+              ),
+
+              const SizedBox(height: 15),
+
+              _sectionTitle('마감 시간'),
+
+              _deadlinePicker(
+                onTap: _selectDeadlineTime,
+                icon: Icons.access_time,
+                value: _deadlineTime.format(context),
               ),
 
               const SizedBox(height: 20),

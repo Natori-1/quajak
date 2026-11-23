@@ -40,6 +40,27 @@ class TaskManagement extends StatelessWidget {
   double get _progress =>
       tasks.isEmpty ? 0 : _completedCount / tasks.length;
 
+      // 오늘 날짜 기준 과제
+List<Assignment> get _todayTasks {
+  final now = DateTime.now();
+
+  return tasks.where((task) {
+    return task.deadline.year == now.year &&
+        task.deadline.month == now.month &&
+        task.deadline.day == now.day;
+  }).toList();
+}
+
+// 오늘 완료된 과제
+int get _todayCompletedCount =>
+    _todayTasks.where((task) => task.completed).length;
+
+// 오늘 과제 진행률
+double get _todayProgress =>
+    _todayTasks.isEmpty
+        ? 0
+        : _todayCompletedCount / _todayTasks.length;
+
   List<Assignment> get _filteredTasks {
     final now = DateTime.now();
 
@@ -210,69 +231,162 @@ class TaskManagement extends StatelessWidget {
     );
   }
 
-  Widget _buildProgressCard() {
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.fromLTRB(18, 3, 18, 14),
-      padding: const EdgeInsets.all(19),
-      decoration: BoxDecoration(
-        color: taskCard,
-        borderRadius: BorderRadius.circular(23),
-        boxShadow: [
-          BoxShadow(
-            color: taskBrown.withOpacity(.06),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
+  
+Widget _buildProgressCard() {
+  return Container(
+    width: double.infinity,
+    margin: const EdgeInsets.fromLTRB(18, 3, 18, 14),
+    child: Column(
+      children: [
+        // 오늘의 과제 (큰 영역)
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(19),
+          decoration: BoxDecoration(
+            color: taskCard,
+            borderRadius: BorderRadius.circular(23),
+            boxShadow: [
+              BoxShadow(
+                color: taskBrown.withOpacity(.06),
+                blurRadius: 15,
+                offset: const Offset(0, 5),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            '오늘의 과제',
-            style: TextStyle(
-              color: taskMuted,
-              fontSize: 13,
-            ),
-          ),
-          const SizedBox(height: 5),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                '$_completedCount / ${tasks.length}',
-                style: const TextStyle(
-                  color: taskText,
-                  fontSize: 27,
-                  fontWeight: FontWeight.w800,
+              const Text(
+                '오늘의 과제',
+                style: TextStyle(
+                  color: taskMuted,
+                  fontSize: 13,
                 ),
               ),
-              const Spacer(),
-              Text(
-                '${(_progress * 100).round()}%',
-                style: const TextStyle(
-                  color: taskBrown,
-                  fontSize: 13,
-                  fontWeight: FontWeight.bold,
+              const SizedBox(height: 8),
+
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Text(
+                    '$_todayCompletedCount / ${_todayTasks.length}',
+                    style: const TextStyle(
+                      color: taskText,
+                      fontSize: 27,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const Spacer(),
+                  Text(
+                    '${(_todayProgress * 100).round()}% 완료',
+                    style: const TextStyle(
+                      color: taskBrown,
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 12),
+
+              ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: LinearProgressIndicator(
+                  value: _todayProgress,
+                  minHeight: 9,
+                  backgroundColor: taskLine,
+                  color: const Color(0xFFC99465),
+                ),
+              ),
+
+              const SizedBox(height: 7),
+
+              const Text(
+                '오늘 마감되는 과제 기준',
+                style: TextStyle(
+                  color: taskMuted,
+                  fontSize: 11,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 10),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(20),
-            child: LinearProgressIndicator(
-              value: _progress,
-              minHeight: 9,
-              backgroundColor: taskLine,
-              color: const Color(0xFFC99465),
-            ),
+        ),
+
+        const SizedBox(height: 10),
+
+        // 전체 과제 (작은 영역)
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 12,
           ),
-        ],
-      ),
-    );
-  }
+          decoration: BoxDecoration(
+            color: taskCard,
+            borderRadius: BorderRadius.circular(18),
+            boxShadow: [
+              BoxShadow(
+                color: taskBrown.withOpacity(.04),
+                blurRadius: 10,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  const Text(
+                    '전체 과제',
+                    style: TextStyle(
+                      color: taskText,
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+
+                  const SizedBox(width: 8),
+
+                  Text(
+                    '$_completedCount / ${tasks.length}',
+                    style: const TextStyle(
+                      color: taskMuted,
+                      fontSize: 12,
+                    ),
+                  ),
+
+                  const Spacer(),
+
+                  Text(
+                    '${(_progress * 100).round()}% 완료',
+                    style: const TextStyle(
+                      color: taskBrown,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 9),
+
+              ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: LinearProgressIndicator(
+                  value: _progress,
+                  minHeight: 6,
+                  backgroundColor: taskLine,
+                  color: const Color(0xFFB9A18D),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    ),
+  );
+}
 
   // 수정된 과제 필터 버튼
   Widget _buildFilter() {

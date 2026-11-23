@@ -80,13 +80,26 @@ class _HomePageState extends State<HomePage> {
   }
 
   // 과제 완료 상태 변경
+  
+  // 과제 완료 상태 변경
   Future<void> _toggleTask(
     Assignment task,
     bool completed,
   ) async {
-    final wasAllCompleted =
-        widget.tasks.isNotEmpty &&
-        widget.tasks.every((item) => item.completed);
+    // 오늘 날짜 가져오기
+    final now = DateTime.now();
+
+    // 오늘 마감인 과제만 추출
+    final todayTasks = widget.tasks.where((item) {
+      return item.deadline.year == now.year &&
+          item.deadline.month == now.month &&
+          item.deadline.day == now.day;
+    }).toList();
+
+    // 변경 전 오늘 과제 완료 여부
+    final wasTodayCompleted =
+        todayTasks.isNotEmpty &&
+        todayTasks.every((item) => item.completed);
 
     setState(() {
       task.completed = completed;
@@ -105,12 +118,19 @@ class _HomePageState extends State<HomePage> {
     // 캘린더에도 완료 상태 반영
     widget.onTasksChanged();
 
-    final isAllCompleted =
-        widget.tasks.isNotEmpty &&
-        widget.tasks.every((item) => item.completed);
+    // 변경 후 오늘 과제 완료 여부
+    final updatedTodayTasks = widget.tasks.where((item) {
+      return item.deadline.year == now.year &&
+          item.deadline.month == now.month &&
+          item.deadline.day == now.day;
+    }).toList();
 
-    // 마지막 과제 완료 시 포춘쿠키 실행
-    if (!wasAllCompleted && isAllCompleted) {
+    final isTodayCompleted =
+        updatedTodayTasks.isNotEmpty &&
+        updatedTodayTasks.every((item) => item.completed);
+
+    // 오늘의 모든 과제를 완료했을 때만 포춘쿠키 실행
+    if (!wasTodayCompleted && isTodayCompleted) {
       showDialog(
         context: context,
         barrierDismissible: false,
@@ -120,6 +140,7 @@ class _HomePageState extends State<HomePage> {
       );
     }
   }
+
 
   @override
   Widget build(BuildContext context) {

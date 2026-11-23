@@ -168,10 +168,13 @@ class TaskCard extends StatelessWidget {
                     ),
 
                     // 마감일
+                    // 마감 날짜 및 시간
                     Text(
-                      '${task.deadline.year}.'
-                      '${task.deadline.month.toString().padLeft(2, '0')}.'
-                      '${task.deadline.day.toString().padLeft(2, '0')}',
+                      '${task.deadline.month}월 '
+                      '${task.deadline.day}일 '
+                      '${task.deadline.hour >= 12 ? '오후' : '오전'} '
+                      '${(task.deadline.hour % 12 == 0 ? 12 : task.deadline.hour % 12).toString().padLeft(2, '0')}:'
+                      '${task.deadline.minute.toString().padLeft(2, '0')}',
                       style: const TextStyle(
                         fontSize: 11,
                         color: Color(0xFFAA9690),
